@@ -43,6 +43,7 @@ function AppContent() {
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="property" options={{ headerShown: false }} />
+        <Stack.Screen name="conversations" options={{ headerShown: false }} />
         <Stack.Screen name="map" options={{ headerShown: false }} />
     </Stack>
   );

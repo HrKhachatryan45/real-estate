@@ -16,6 +16,7 @@ export const Avatar: React.FC<AvatarProps> = ({
 }) => {
   const getInitials = (name: string) => {
     const names = name.split(' ');
+    
     return names.map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 

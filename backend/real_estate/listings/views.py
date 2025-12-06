@@ -18,7 +18,8 @@ def create_listing(request):
 
     data = {}
 
-    required = ['title','description','price','listing_type','property_type','city','address','square_meters','bedrooms','bathrooms']
+    required = ['title','description','price','currency','listing_type','property_type','city','address','square_meters','bedrooms','bathrooms']
+    
     for field in required:
         if not request.POST.get(field):
             return JsonResponse({'error': f'Missing field: {field}'}, status=400)
@@ -45,6 +46,19 @@ def create_listing(request):
         except ValueError:
             return JsonResponse({'error': f'Invalid {field}'}, status=400)
 
+
+    # Optional boolean fields
+    bool_fields = ['furnished', 'new_construction', 'parking', 'balcony', 'elevator', 'is_active', 'is_featured']
+    for field in bool_fields:
+        value = request.POST.get(field)
+        # Convert string "true"/"false" or missing -> boolean
+        data[field] = str(value).lower() == 'true' if value is not None else False
+
+    # Optional heating_type and land_area
+    data['heating_type'] = request.POST.get('heating_type', 'none')
+    data['land_area'] = request.POST.get('land_area')  # can be None
+
+    
     if data['listing_type'] not in ['rent', 'sale']:
         return JsonResponse({'error': 'Invalid listing_type'}, status=400)
     if data['property_type'] not in ['apartment','house','commercial','land','villa','office']:
@@ -87,10 +101,12 @@ def edit_listing(request,id):
         "property_type", "city", "address", "square_meters", "land_area",
         "bedrooms", "bathrooms", "floor", "total_floors", "furnished",
         "new_construction", "parking", "balcony", "elevator", "heating_type",
-        "main_image", "images", "is_active", "is_featured"
+        "images", "is_active", "is_featured"
     ]
+
     
-    clean_data = {k: v for k, v in data.items() if k in allowed_fields}
+    
+    clean_data = {k:v if v not  in ('true','false') else (True if v == 'true' else False  ) for k, v in data.items() if k in allowed_fields}
 
     files = request.FILES.getlist('images')
     rest_images = listing.images
@@ -219,7 +235,7 @@ def get_featured_ones(request):
         start = (page - 1) * limit
         end = start + limit
     
-        listings = Listing.objects.filter(is_featured=True).all()
+        listings = Listing.objects.filter(is_featured=True).order_by('-created_at').all()
 
         sliced_listings = listings[start:end]
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import Svg, { Path } from 'react-native-svg';
+import { router } from 'expo-router';
 import { Animated, TouchableOpacity, View, Text, useColorScheme } from 'react-native';
 import { Tabs } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -110,7 +111,8 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
               
               </Animated.View>
             </TouchableOpacity>
-              {index == 1 && <View
+              {index == 1 && <TouchableOpacity
+              onPress={() => router.replace('/property/create')}
               key={state.routes?.length + 1}
                   style={{     
                 width: 50,
@@ -123,9 +125,10 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
                 justifyContent: 'center',
                 flexDirection: 'row',
               }}
+              
                 >
                   <IconSymbol name="plus" size={24} color="white" />
-                </View>}
+                </TouchableOpacity>}
             </View>
         );
 

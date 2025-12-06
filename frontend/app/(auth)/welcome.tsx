@@ -7,6 +7,7 @@ import Animated , {FadeInDown} from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { Asset } from 'expo-asset';
 import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 
 export default function Welcome() {
     const router = useRouter();
@@ -29,8 +30,19 @@ export default function Welcome() {
     }
     load();
   }, []);
+  const user = useSelector((state) => state?.auth?.user)|| {};
+
+
+useEffect(() => {
+    if(Object.keys(user)?.length > 0) {
+        router.replace('/(tabs)/')
+    }
+  },[user])
 
   if (!ready) return null; // or splash loader
+
+
+
 
 
   return (

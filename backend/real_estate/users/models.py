@@ -16,6 +16,8 @@ class User(BaseModel):
     phone_number = models.CharField(max_length=20, null=True, blank=True)
     favourite_listings = models.JSONField(default=list, blank=True)
     recent_listings = models.JSONField(default=list, blank=True)
+    conversations = models.JSONField(default=list,blank=True)
+    expo_token = models.CharField(max_length=200,default='',null=True)
 
     class Meta:
         db_table = 'real_estate_users'

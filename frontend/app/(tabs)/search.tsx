@@ -186,10 +186,24 @@ export default function search() {
             </TouchableOpacity>
           </View>
         )}
-        {searchResults.length == 0 && (
+        {searchResults?.length == 0 && hasMore && (
             <Text style={{fontSize:18,fontWeight:'600',marginBottom:10,color:theme.text}}>Recently Viewed</Text>
         )}
-        {searchResults.length == 0 && (
+              
+          {searchResults?.length == 0 && !hasMore && (
+              <Text style={{fontSize:18,fontWeight:'600',marginBottom:10,color:theme.text,textAlign:'center'}}>No Results </Text>
+          )}
+              
+          {searchResults?.length == 0 && !hasMore && (
+              <View style={{flex:1,justifyContent:'center',flexDirection:'row'}}>
+                <Image
+                  source={require('../../assets/images/no-more.webp')}
+                  style={{width:200,height:170}}
+                />
+              </View>
+          )}
+              
+        {searchResults?.length == 0 && hasMore &&  (
           <FlatList
           data={recent}
           horizontal

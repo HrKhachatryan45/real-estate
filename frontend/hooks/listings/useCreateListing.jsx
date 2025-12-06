@@ -6,6 +6,7 @@ import useRefreshAccessToken from "../../hooks/auth/useRefreshAccessToken"
 const useCreateListing = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [success,setSuccess] = useState('')
     const HOST_URL = Constants.expoConfig?.extra?.HOST_URL;
     const dispatch = useDispatch();
     const access_token = useSelector(state => state.auth.token)
@@ -44,8 +45,8 @@ const useCreateListing = () => {
                 setLoading(false);
                 return null;    
             }
+            setSuccess(json.message)
 
-            console.log(json,'create  listing result');
             
 
         }catch(err){
@@ -55,7 +56,7 @@ const useCreateListing = () => {
         }
     }
 
-    return {createListing,error,loading,setError};
+    return {createListing,error,loading,setError,success};
 }
 
 export default useCreateListing

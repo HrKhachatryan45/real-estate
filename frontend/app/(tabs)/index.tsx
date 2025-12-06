@@ -117,6 +117,13 @@ export default function index() {
 
   const categories = ['All', 'House', 'Apartment', 'Villa', 'Commercial']
 
+
+  const currency = {
+      USD: "$",
+      EUR: "€",
+      AMD: "֏",
+  }
+
   const renderFeaturedItem = ({ item }) => (
     <TouchableOpacity onPress={() => router.push(`/property/${item.id}`)} style={styles.featuredCard}>
       <Image
@@ -127,7 +134,7 @@ export default function index() {
         <Text style={styles.featuredBadgeText}>Featured</Text>
       </View>
       <View style={styles.featuredOverlay}>
-        <Text style={styles.featuredPrice}>${item.price?.toLocaleString()}</Text>
+        <Text style={styles.featuredPrice}>{currency[item.currency]}{item.price?.toLocaleString()}</Text>
         <Text style={styles.featuredTitle} numberOfLines={1}>{item.title}</Text>
         <View style={styles.featuredLocation}>
           <Ionicons name="location-outline" size={14} color="#FFF" />
@@ -136,6 +143,9 @@ export default function index() {
       </View>
     </TouchableOpacity>
   )
+
+    
+
 
   const renderListingItem = ({ item }) => (
     <TouchableOpacity onPress={() => router.push(`/property/${item.id}`)} style={[styles.listingCard]}>
@@ -148,7 +158,7 @@ export default function index() {
       </View>
       <View style={styles.listingDetails}>
         <Text style={[styles.listingTitle, { color: theme.textSecondary }]} numberOfLines={2}>{item.title}</Text>
-        <Text style={[styles.listingPrice, { color: theme.primaryLight }]}>${item.price?.toLocaleString()}</Text>
+        <Text style={[styles.listingPrice, { color: theme.primaryLight }]}>{currency[item.currency]}{item.price?.toLocaleString()}</Text>
         <View style={styles.listingSpecs}>
           <View style={styles.specItem}>
             <Ionicons name="bed-outline" size={16} color="#666" />

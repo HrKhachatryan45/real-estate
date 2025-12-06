@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import useGetListing from '@/hooks/listings/useGetListing'
 import Colors from '@/constants/Colors'
-import { ChevronLeft, Heart, ChevronDown, Bed, Bath, Maximize, MapPin, Home, Calendar, Eye, ChevronRight, Phone } from 'lucide-react-native'
+import { ChevronLeft, Heart, ChevronDown, Bed, Bath, Maximize, MapPin, Home, Calendar, Eye, ChevronRight, Phone, Edit, Edit2 } from 'lucide-react-native'
 import useToggleFavourite from '@/hooks/listings/useToggleFavourite'
 import { useSelector } from 'react-redux'
 
@@ -148,6 +148,15 @@ useEffect(() => {
         </View>
     )
 
+
+const SCREEN_WIDTH = Dimensions.get('window').width
+
+  const onScroll = (event) => {
+    const x = event.nativeEvent.contentOffset.x;
+    const index = Math.round(x / SCREEN_WIDTH);
+    setCurrentIndex(index);
+  };
+
    
 
     return (
@@ -160,6 +169,7 @@ useEffect(() => {
                         horizontal
                         pagingEnabled
                         showsHorizontalScrollIndicator={false}
+                        onScroll={onScroll}
                         keyExtractor={(item, index) => index.toString()}
                         renderItem={({ item }) => (
                             <ImageBackground
@@ -187,7 +197,7 @@ useEffect(() => {
                         </TouchableOpacity>
                     )}
 
-                    {currentIndex < propertyListing?.images.length - 1 && (
+                    {currentIndex < propertyListing?.images?.length - 1 && (
                         <TouchableOpacity
                             onPress={handleNext}
                             style={{
@@ -212,16 +222,30 @@ useEffect(() => {
                                 </View>
                             }
                             title={
-                                <TouchableOpacity 
+                                <View style={{flexDirection:"row",justifyContent:'center',gap:10}}>
+                                    <TouchableOpacity 
                                     onPress={handleToggleFavourite}
                                     style={[styles.iconButton, { backgroundColor: 'rgba(0,0,0,0.5)' }]}
-                                >
-                                    <Heart 
-                                        color={user?.favourite_listings.includes(propertyListing?.id) ? 'red' : 'white'} 
-                                        fill={user?.favourite_listings.includes(propertyListing?.id) ? 'red' : 'none'}
-                                        size={24} 
-                                    />
-                                </TouchableOpacity>
+                                    >
+                                        <Heart 
+                                            color={user?.favourite_listings?.includes(propertyListing?.id) ? 'red' : 'white'} 
+                                            fill={user?.favourite_listings?.includes(propertyListing?.id) ? 'red' : 'none'}
+                                            size={24} 
+                                        />
+                                    </TouchableOpacity>
+                                    {propertyListing.owner.id === user?.id && (
+                                        <TouchableOpacity 
+                                        onPress={() => router.replace('property/edit/'+id)}
+                                        style={[styles.iconButton, { backgroundColor: 'rgba(0,0,0,0.5)' }]}
+                                        >
+                                            <Edit2
+                                                color={theme.primary}
+                                                fill={theme.primary} 
+                                                size={24} 
+                                            />
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
                             }
                         />
                     </View>
@@ -376,7 +400,7 @@ useEffect(() => {
                             backgroundColor: theme.background,
                             borderColor: theme.textSecondary 
                         }]}>
-                            <View style={[styles.locationBox,{width:'80%'}]}>
+                            <View style={[styles.locationBox,{width:'80%',borderWidth:0}]}>
                                 <MapPin size={20} color={theme.primary} />
                                 <View style={{ marginLeft: 12, flex: 1 }}>
                                     <Text style={[styles.locationText, { color: theme.text }]}>
@@ -427,11 +451,13 @@ useEffect(() => {
                         </View>
                     )}
 
-                    <TouchableOpacity 
+                    {/* to avoid same person messaging  */}
+                    {user.id != propertyListing.owner.id && <TouchableOpacity 
+                        onPress={() => router.replace('/conversations/'+propertyListing?.owner?.id)}
                         style={[styles.contactButton, { backgroundColor: theme.primary }]}
                     >
                         <Text style={styles.contactButtonText}>Message Owner</Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity>}
                 </View>
             </ScrollView>
         </SafeAreaView>

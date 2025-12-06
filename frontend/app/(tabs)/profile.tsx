@@ -21,7 +21,7 @@ export default function profile() {
   const colors = useColorScheme()
   const theme = Colors[colors] ?? Colors.light
   const [isEditing,setIsEditing] = useState(false)
-  const user = useSelector((state) => state?.auth?.user)
+  const user = useSelector((state) => state?.auth?.user) || {}
 
   useEffect(() => {
     if (Object.keys(user)?.length == 0) {
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
       justifyContent: "center",
       alignItems: "center",
       backgroundColor:theme.background,
-      padding: 20,
+      paddingHorizontal: 20,
     },
       iconButton: {
     padding: 10,
@@ -523,7 +523,7 @@ useEffect(() => {
   }
 
   const handleEditListing = (id) => {
-
+      router.replace('property/edit/'+id);
   }
 
     
@@ -590,14 +590,19 @@ useEffect(() => {
                 onPress={handleImageUpload}
                 style={[styles.uploadButton, { backgroundColor: theme.primary }]}
               >
-                <Upload size={16} color={'white'} />
+                {!loading && (
+                  <Upload size={16} color={'white'} />
+                )}
+                {loading && (
+                  <ActivityIndicator />
+                )}
               </TouchableOpacity>
               <Image
-                source={{ uri: user?.profile_picture }}
+                source={user?.profile_picture ? { uri: user?.profile_picture }:require('@/assets/images/default-user.jpeg')}
                 style={styles.profileImage}
               />
             </View>
-            {!isEditing && <Text style={[styles.userName, { color: theme.text }]}>{user.fullname}</Text>}
+            {!isEditing && <Text style={[styles.userName, { color: theme.text }]}>{user?.fullname}</Text>}
             {isEditing && (
               <Input 
                   placeholder="Fullname"
@@ -609,7 +614,7 @@ useEffect(() => {
               />
     
             )}
-            <Text style={[styles.userEmail, { color: theme.textSecondary }]}>{user.email}</Text>
+            <Text style={[styles.userEmail, { color: theme.textSecondary }]}>{user?.email}</Text>
           </View>
 
           <View style={styles.infoSection}>
@@ -619,7 +624,7 @@ useEffect(() => {
               </View>
               <View style={styles.infoContent}>
                 <Text style={[styles.infoLabel, { color: theme.textSecondary }]}>Email</Text>
-                <Text style={[styles.infoValue, { color: theme.text }]}>{user.email}</Text>
+                <Text style={[styles.infoValue, { color: theme.text }]}>{user?.email}</Text>
               </View>
             </View>
 
@@ -629,7 +634,7 @@ useEffect(() => {
               </View>
               <View style={styles.infoContent}>
                 <Text style={[styles.infoLabel, { color: theme.textSecondary }]}>Phone</Text>
-                {!isEditing &&  <Text style={[styles.infoValue, { color: theme.text }]}>{user.phone_number}</Text>}
+                {!isEditing &&  <Text style={[styles.infoValue, { color: theme.text }]}>{user?.phone_number}</Text>}
                  {isEditing && (
                     <Input 
                         placeholder="Phone"
@@ -649,7 +654,7 @@ useEffect(() => {
               </View>
               <View style={styles.infoContent}>
                 <Text style={[styles.infoLabel, { color: theme.textSecondary }]}>City</Text>
-               {!isEditing && <Text style={[styles.infoValue, { color: theme.text }]}>{user.city}</Text>}
+               {!isEditing && <Text style={[styles.infoValue, { color: theme.text }]}>{user?.city}</Text>}
                 {isEditing && (
                     <Input 
                         placeholder="City"
@@ -676,7 +681,7 @@ useEffect(() => {
               </View>
               <View style={styles.infoContent}>
                 <Text style={[styles.infoLabel, { color: theme.textSecondary }]}>Member Since</Text>
-                <Text style={[styles.infoValue, { color: theme.text }]}>{formatDate(user.created_at)}</Text>
+                <Text style={[styles.infoValue, { color: theme.text }]}>{formatDate(user?.created_at)}</Text>
               </View>
             </View>
           </View>
@@ -686,7 +691,7 @@ useEffect(() => {
               <View style={[styles.statIconCircle, { backgroundColor: '#FF6B6B20' }]}>
                 <Heart size={24} color="#FF6B6B" />
               </View>
-              <Text style={[styles.statNumber, { color: theme.text }]}>{user.favourite_listings?.length || 0}</Text>
+              <Text style={[styles.statNumber, { color: theme.text }]}>{user?.favourite_listings?.length || 0}</Text>
               <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Favorites</Text>
             </View>
 
@@ -694,7 +699,7 @@ useEffect(() => {
               <View style={[styles.statIconCircle, { backgroundColor: theme.primary + '20' }]}>
                 <Clock size={24} color={theme.primary} />
               </View>
-              <Text style={[styles.statNumber, { color: theme.text }]}>{user.recent_listings?.length || 0}</Text>
+              <Text style={[styles.statNumber, { color: theme.text }]}>{user?.recent_listings?.length || 0}</Text>
               <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Recent Views</Text>
             </View>
           </View>
@@ -713,7 +718,7 @@ useEffect(() => {
               onPress={() => setShowFavourite(true)}
             >
               <Heart size={20} color={theme.primary} />
-              <Text style={[styles.actionButtonText, { color: theme.text }]}>My Favorites</Text>
+              <Text style={[styles.actionButtonText, { color: theme.text }]}>My Favorites {user?.favourite_listings?.length}</Text>
               <ChevronLeft size={20} color={theme.textSecondary} style={{ transform: [{ rotate: '180deg' }] }} />
             </TouchableOpacity>
 
@@ -731,7 +736,7 @@ useEffect(() => {
               onPress={() => setShowRecent(true)}
             >
               <Clock size={20} color={theme.primary} />
-              <Text style={[styles.actionButtonText, { color: theme.text }]}>Recent Views</Text>
+              <Text style={[styles.actionButtonText, { color: theme.text }]}>Recent Views {user?.recent_listings?.length}</Text>
               <ChevronLeft size={20} color={theme.textSecondary} style={{ transform: [{ rotate: '180deg' }] }} />
             </TouchableOpacity>
 
@@ -746,6 +751,7 @@ useEffect(() => {
         </View>
       </ScrollView>
       <Modal visible={showModal} animationType='fade' transparent={false} >
+        <SafeAreaView style={{flex:1}}>
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={[styles.modalContainer,{position:'relative'}]}>
             <View style={{alignItems:'start',width:'100%',zIndex:999,flex:1,position:'absolute',top:30}} >
@@ -809,10 +815,11 @@ useEffect(() => {
                       style={styles.animatedImage2}
                   />  
           </View>
-                  
               </TouchableWithoutFeedback>
+        </SafeAreaView>
       </Modal>
        <Modal visible={showFavourite} animationType='fade' transparent={false} >
+         <SafeAreaView style={{flex:1}}>
          <View style={[styles.modalContainer,{position:'relative',paddingHorizontal:0}]}>
                <FlatList
                 showsVerticalScrollIndicator={false}
@@ -854,9 +861,11 @@ useEffect(() => {
               onEndReachedThreshold={0.5}
           />
          </View>
+         </SafeAreaView>
       </Modal>
 
          <Modal visible={showRecent} animationType='fade' transparent={false} >
+            <SafeAreaView style={{flex:1}}>
          <View style={[styles.modalContainer,{position:'relative',paddingHorizontal:0}]}>
                <FlatList
                 showsVerticalScrollIndicator={false}
@@ -898,9 +907,11 @@ useEffect(() => {
               onEndReachedThreshold={0.5}
           />
          </View>
+         </SafeAreaView>
       </Modal>
 
       <Modal visible={showMyListings} animationType='fade' transparent={false} >
+        <SafeAreaView style={{flex:1}}>
          <View style={[styles.modalContainer,{position:'relative',paddingHorizontal:0}]}>
             <FlatList
               showsVerticalScrollIndicator={false}
@@ -942,6 +953,7 @@ useEffect(() => {
               onEndReachedThreshold={0.5}
             />
          </View>
+         </SafeAreaView>
       </Modal>
 
     </SafeAreaView>

@@ -116,7 +116,7 @@ def login(request):
         max_age= 7 * 24 * 60 * 60
     )
 
-    return response;
+    return response
 
 def logout(request):
     if(request.method == 'POST'):
@@ -263,3 +263,5 @@ def reset_password(request):
     return JsonResponse({
         'message':'Password resetted successfully'
     }, status=200)
+
+
