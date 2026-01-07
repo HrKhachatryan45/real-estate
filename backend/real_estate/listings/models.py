@@ -2,7 +2,7 @@ from real_estate.models import BaseModel
 from django.db import models
 from users.models import User
 import uuid
-
+from .utils import send_expiration_email
 
 class Listing(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -80,6 +80,16 @@ class Listing(BaseModel):
 
     def __str__(self):
         return f"{self.title} — {self.city}, {self.price} {self.currency}"
+
+    def check_and_expire(self):
+        from django.utils import timezone
+        if self.updated_at + timezone.timedelta(days=7) < timezone.now():
+            self.is_active = False
+            self.save()
+            send_expiration_email(self.owner.email, self.title,self.owner)
+            return True
+        return False
+    
 
     class Meta:
         db_table = 'real_estate_listings'    

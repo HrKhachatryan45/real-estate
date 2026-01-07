@@ -1,7 +1,7 @@
-import { StyleSheet,SafeAreaView, Text, View, Image,useColorScheme,FlatList,ActivityIndicator, Touchable, TouchableOpacity } from 'react-native'
+import { StyleSheet,SafeAreaView,ScrollView, Text,Modal, View, Image,useColorScheme,FlatList,ActivityIndicator, Touchable, TouchableOpacity } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-
-import React, { useEffect } from 'react'
+import { Select } from '@/components/ui/Select'
+import React, { useEffect, useState } from 'react'
 import { useLocalSearchParams } from 'expo-router'
 import { useRouter } from 'expo-router';
 import {Header} from '../../components/Header';
@@ -12,11 +12,28 @@ import { useSelector } from 'react-redux';
 import useSearchListings from '../../hooks/listings/useSearchListings';
 import useToggleFavourite from '@/hooks/listings/useToggleFavourite';
 import useGetFavRecent from '@/hooks/listings/useGetFavRecent';
+import { Switch } from '@/components/ui/Switch'
+import { Button } from '@/components/ui/Button'
 
 export default function search() {
   const {query} = useLocalSearchParams();
   const router = useRouter();
   const color = useColorScheme()
+  const [filters,setFilters] = useState({
+    city:'',
+    country:'',
+    min_price:0,
+    max_price:2000000,
+    min_square_meters:0,
+    max_square_meters:1000,
+    max_total_rooms:0,
+    furnished:false,
+    new_construction:false,
+    parking:false,
+    balcony:false,
+    elevator:false,
+    is_featured:false
+  })
   const theme = Colors[color ?? 'light'];
   const user = useSelector((state:any) => state.auth.user);
   const [searchQuery, setSearchQuery] = React.useState(query || '');
@@ -27,6 +44,9 @@ export default function search() {
   const {searchListings,error, loading} = useSearchListings();  
   const [isFetchingMore, setIsFetchingMore] = React.useState(false);
   const [recent,setRecent] = React.useState([]);
+  const [showFilters,setShowFilters] = useState(false)
+  const [trigger,setTrigger] = useState(0);
+
 
   const {getFavRecent,loading:recentLoading} = useGetFavRecent();
 
@@ -38,42 +58,113 @@ export default function search() {
     fetchRecent();
   },[])
 
+      const [countries, setCountries] = useState([]);
+      const [cities, setCities] = useState([]);
+      const [loadingX, setLoadingX] = useState(false)
+  
+      useEffect(() => {
+          const fetchCountries = async () => {
+              setLoadingX(true)
+              try {
+                  const response = await fetch('https://restcountries.com/v3.1/all?fields=id,name,cca2');
+                  const data = await response.json();
+                  const countryList = data.map((c) => ({
+                      label: c.name.common,
+                      value: c.name.common,
+                  }));
+                  setCountries(countryList);
+              } catch (err) {
+                  console.error('Error fetching countries', err);
+              } finally {
+                  setLoadingX(false)
+              }
+          };
+  
+          const fetchCities = async () => {
+              setLoadingX(true)
+              try {
+                  const response = await fetch('https://countriesnow.space/api/v0.1/countries/cities', {
+                      method: 'POST',
+                      headers: {
+                          'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({ country: filters?.country })
+                  });
+  
+                  const data = await response.json();
+                  if (data.data) {
+                      const city = data.data.map((cx) => ({ value: cx, label: cx }))
+                      setCities(city);
+                  }
+              } catch (err) {
+                  console.error('Error fetching cities', err);
+              } finally {
+                  setLoadingX(false)
+              }
+          };
+  
+         if(showFilters){
+             fetchCountries();
+  
+          if (filters?.country != '') {
+              fetchCities()
+          }
+         }
+      }, [filters?.country,showFilters]);
+
 
   React.useEffect(() => {
-    if (query) {
+    if (query || trigger > 0) {
       setSearchQuery(query);
       setPage(1);
+      setHasMore(true)
       setShouldSearch(true);
     }
-  }, [query]);
+  }, [query,trigger]);
 
 
 
   React.useEffect(() => {
     const fetchSearchResults = async () => {
       setIsFetchingMore(true);
-      const listings = await searchListings(page,4,searchQuery);
+
+     const cleanFilters = Object.fromEntries(
+        Object.entries(filters).filter(([key, value]) => {
+            // Keep numbers (including 0), booleans, and non-empty string
+            if (typeof value == "boolean") return value
+            if (typeof value === 'number') return true;
+            if (typeof value === 'string') return value.trim() !== '';
+            return false;
+        })
+        );
+        let newS = searchQuery
+        if (!searchQuery){
+            newS = ''
+        }
+      const listings = await searchListings(page,4,newS,cleanFilters);
       if (page == 1){
         setSearchResults(listings);
+        setHasMore(true)
       }else{
         setSearchResults(prev => [...prev,...listings]);
       }
-      if (listings.length < 4) {
+
+      if (listings?.length < 4) {
         setHasMore(false);
       }
-
+      setShowFilters(false)
       setIsFetchingMore(false);
       setShouldSearch(false);
     }
     if(shouldSearch || page > 1){
       fetchSearchResults();
     }
-  }, [page,shouldSearch]);
+  }, [page,shouldSearch,trigger]);
 
   const loadMore = () => {
       if (isFetchingMore) return;
       if (!hasMore) return;
-     if (!searchQuery) return; 
+        if (searchResults.length === 0) return;
       setPage(prev => prev + 1);
     };
   
@@ -87,7 +178,7 @@ export default function search() {
 
     
     const renderListingItem = ({ item },value) => (
-      <TouchableOpacity onPress={() => router.push(`/property/${item.id}`)} style={!value ? [styles.listingCard]:[styles.listingCardHorizontal]}>
+      <TouchableOpacity onPress={() => router.push(`/property/${item.id}`)} style={!value ? [styles.listingCard,{shadowColor:theme.text}]:[styles.listingCardHorizontal]}>
         <Image
           source={{ uri: item.images[0]?.url }}
           style={styles.listingImage}
@@ -114,9 +205,193 @@ export default function search() {
 
 
   return (
-    <SafeAreaView>
-     
+    <SafeAreaView style={{flex:1,position:'relative'}}>
 
+        <Modal visible={showFilters} animationType='fade' transparent={false}>
+            <SafeAreaView style={{flex:1,position:'relative'}}>
+                <ScrollView showsVerticalScrollIndicator={false} style={{
+                    flex:1,
+                    paddingHorizontal:20,
+                    paddingVertical:15,
+                    backgroundColor:theme.background
+                }}>
+
+                    <Header
+                        leftIconStyles={{ backgroundColor: 'transparent', padding: 0 }}
+                        onPress={() => setShowFilters(false)}
+                        icon={
+                        <View style={[styles.iconButton, { backgroundColor: theme.primary }]}>
+                            <ChevronLeft color={'white'} size={24} />
+                        </View>
+                        }
+                        title={
+                            <Text style={{color:'black',fontSize:20}}>Filters</Text>
+                        }
+                    />
+
+                        <View style={styles.section}>
+                            <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Location</Text>
+        
+                            <Select
+                                placeholder={'Select Country *'}
+                                addStyles={{ width: '100%' }}
+                                selectedValue={filters?.country}
+                                options={countries}
+                                onValueChange={(value) => setFilters((prev) => ({ ...prev, country: value }))}
+                            />
+        
+                            <Select
+                                placeholder={'Select City *'}
+                                addStyles={{ width: '100%', marginTop: 10 }}
+                                selectedValue={filters?.city}
+                                options={cities}
+                                onValueChange={(value) => setFilters((prev) => ({ ...prev, city: value }))}
+                            />
+
+                         
+                        </View>
+
+
+                       <View style={styles.section}>
+                            <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Price</Text>
+        
+                           <View style={{width:'100%',flexDirection:'row',justifyContent:'space-between'}}>
+                                <Input
+                                    keyboardType='decimal-pad'
+                                    value={String(filters.min_price)} 
+                                    containerStyle={{width:'48%'}}
+                                    inputContainerStyle={{borderColor:'black',borderWidth:1}}
+                                    placeholder='Min Price'
+                                    onChangeText={(text) => setFilters((prev) => ({...prev,min_price:+text}))}
+                                />
+                                <Input
+                                    keyboardType='decimal-pad'
+                                    value={String(filters.max_price)} 
+                                    containerStyle={{width:'48%'}}
+                                    inputContainerStyle={{borderColor:'black',borderWidth:1}}
+                                    placeholder='Max Price'
+                                    onChangeText={(text) => setFilters((prev) => ({...prev,max_price:+text}))}
+                                />
+                            </View>
+                        </View>
+
+                        <View style={styles.section}>
+                            <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Area</Text>
+        
+                            <Input 
+                                value={filters.max_total_rooms?.toString()} 
+                                containerStyle={{width:'100%'}}
+                                inputContainerStyle={{borderColor:'black',borderWidth:1}}
+                                placeholder='Max Total Rooms'
+                                keyboardType='decimal-pad'
+                                onChangeText={(text) => setFilters((prev) => ({...prev,max_total_rooms:+text}))}
+                            />
+
+                           <View style={{width:'100%',flexDirection:'row',justifyContent:'space-between'}}>
+                                <Input 
+                                    keyboardType='decimal-pad'
+                                    value={filters.min_square_meters?.toString()} 
+                                    containerStyle={{width:'48%'}}
+                                    inputContainerStyle={{borderColor:'black',borderWidth:1}}
+                                    placeholder='Min Square Metres'
+                                    onChangeText={(text) => setFilters((prev) => ({...prev,min_square_meters:+text}))}
+                                />
+                                <Input 
+                                    keyboardType='decimal-pad'
+                                    value={filters.max_square_meters?.toString()} 
+                                    containerStyle={{width:'48%'}}
+                                    inputContainerStyle={{borderColor:'black',borderWidth:1}}
+                                    placeholder='Max Metres'
+                                    onChangeText={(text) => setFilters((prev) => ({...prev,max_square_meters:+text}))}
+                                />
+                            </View>
+                        </View>
+
+
+                       <View style={styles.section}>
+                            <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>More filters</Text>
+        
+                           <View style={{width:'100%',flexDirection:'column',justifyContent:'space-between'}}>
+                                 <View style={styles.switchRow}>
+                                    <Text style={[styles.switchLabel, { color: theme.text }]}>Furnished</Text>
+                                    <Switch
+                                        value={filters.furnished}
+                                        onValueChange={(value) => setFilters((prev) => ({ ...prev, furnished: value }))}
+                                    />
+                                </View>
+
+                                <View style={styles.switchRow}>
+                                    <Text style={[styles.switchLabel, { color: theme.text }]}>New Construction</Text>
+                                    <Switch
+                                        value={filters.new_construction}
+                                        onValueChange={(value) => setFilters((prev) => ({ ...prev, new_construction: value }))}
+                                    />
+                                </View>
+            
+                                <View style={styles.switchRow}>
+                                    <Text style={[styles.switchLabel, { color: theme.text }]}>Parking</Text>
+                                    <Switch
+                                        value={filters.parking}
+                                        onValueChange={(value) => setFilters((prev) => ({ ...prev, parking: value }))}
+                                    />
+                                </View>
+            
+                                <View style={styles.switchRow}>
+                                    <Text style={[styles.switchLabel, { color: theme.text }]}>Balcony</Text>
+                                    <Switch
+                                        value={filters.balcony}
+                                        onValueChange={(value) => setFilters((prev) => ({ ...prev, balcony: value }))}
+                                    />
+                                </View>
+            
+                                <View style={styles.switchRow}>
+                                    <Text style={[styles.switchLabel, { color: theme.text }]}>Elevator</Text>
+                                    <Switch
+                                        value={filters.elevator}
+                                        onValueChange={(value) => setFilters((prev) => ({ ...prev, elevator: value }))}
+                                    />
+                                </View>
+
+                                   <View style={styles.switchRow}>
+                                    <Text style={[styles.switchLabel, { color: theme.text }]}>Featured</Text>
+                                    <Switch
+                                        value={filters.is_featured}
+                                        onValueChange={(value) => setFilters((prev) => ({ ...prev, is_featured: value }))}
+                                    />
+                                </View>
+                            </View>
+                        </View>
+
+
+                           <View style={{width:'100%',flexDirection:'row',justifyContent:'space-between'}}>
+
+                            <Button onPress={() => {
+                                setFilters({
+                                    city:'',
+                                    country:'',
+                                    min_price:0,
+                                    max_price:200000,
+                                    min_square_meters:0,
+                                    max_square_meters:1000,
+                                    max_total_rooms:0,
+                                    furnished:false,
+                                    new_construction:false,
+                                    parking:false,
+                                    balcony:false,
+                                    elevator:false,
+                                    is_featured:false
+                                })
+                                setTrigger((prev) => prev + 1)
+                            }} title='Reset Filters' addStyles={{backgroundColor:theme.accentLight,height:50,borderRadius:10,marginTop:5,width:'48%' }}/>
+
+                             <Button onPress={() => {
+                                setTrigger((prev) => prev + 1)
+                            }} title='Apply Filters' addStyles={{backgroundColor:theme.primary,height:50,borderRadius:10,marginTop:5,width:'48%' }}/>
+                            </View>
+                </ScrollView>    
+            </SafeAreaView>
+
+        </Modal>
        <FlatList
           showsVerticalScrollIndicator={false}
           data={searchResults}
@@ -181,7 +456,7 @@ export default function search() {
                 color:theme.textSecondary
               }}
             />
-            <TouchableOpacity style={{ position: 'absolute', right: 15, top: 18 }}>
+            <TouchableOpacity onPress={() => setShowFilters(true)} style={{ position: 'absolute', right: 15, top: 18 }}>
             <SlidersHorizontal color={theme.textSecondary}  size={20} />
             </TouchableOpacity>
           </View>
@@ -221,6 +496,7 @@ export default function search() {
         )}
       </View>
           </>}
+
           columnWrapperStyle={{
             justifyContent: 'space-between',
             paddingHorizontal: 20,
@@ -244,8 +520,16 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     alignItems: 'center',
     justifyContent: 'center'
-  },
-    listingCardHorizontal: {
+},
+    section: {
+    marginTop: 20,
+    },
+    sectionTitle: {
+        fontSize: 17,
+        fontWeight: '600',
+        marginBottom: 10,
+    },
+ listingCardHorizontal: {
     width: 200,   // <- FIXED width
     marginRight: 12,
     borderRadius: 12,
@@ -257,6 +541,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderRadius: 12,
     overflow: 'hidden',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 6,          
   },
   listingImage: {
     width: '100%',
@@ -309,4 +597,13 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 20,
   },
+  switchRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginVertical: 5
+    },
+    switchLabel: {
+        fontSize: 16
+    }
 })

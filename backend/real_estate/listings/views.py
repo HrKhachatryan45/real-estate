@@ -1,3 +1,4 @@
+from django.db.models import ExpressionWrapper, F, IntegerField
 from django.http import JsonResponse
 from users.serializers.user_serializer import UserSerializer
 from django.views.decorators.csrf import csrf_exempt
@@ -181,6 +182,15 @@ def get_listing(request,id):
 
 
     listing = Listing.objects.filter(id=listing_id).select_related('owner').first()
+    
+    if listing.check_and_expire():
+        safe_listing = ListingSerializer(listing).data
+        del safe_listing['owner']
+        safe_listing['expired'] = True
+        return JsonResponse({'listing':safe_listing})
+
+        
+
 
     viewed_key = f'viewed_listing_{id}'    
 
@@ -210,10 +220,10 @@ def get_listings(request):
         start = (page - 1) * limit
         end = start + limit
         
-        listings = Listing.objects.all()
+        listings = Listing.objects.filter(is_active=True).all()
 
         if property_type != 'all':
-            listings = Listing.objects.filter(property_type=property_type).all()
+            listings = listings.filter(property_type=property_type).all()
     
         
 
@@ -235,7 +245,7 @@ def get_featured_ones(request):
         start = (page - 1) * limit
         end = start + limit
     
-        listings = Listing.objects.filter(is_featured=True).order_by('-created_at').all()
+        listings = Listing.objects.filter(is_featured=True,is_active=True).order_by('-created_at').all()
 
         sliced_listings = listings[start:end]
 
@@ -255,10 +265,11 @@ def get_advanced_listings(request):
         except:
             filters = {}
 
+        print(filters,134)
         page = int(request.GET.get('page',1)) 
         limit = int(request.GET.get('limit',10)) 
         search_query = str(request.GET.get('searchQuery','')) 
-        listings = Listing.objects.all() 
+        listings = Listing.objects.filter(is_active=True).all() 
 
         if search_query: 
             listings = listings.filter(title__icontains=search_query)
@@ -279,12 +290,12 @@ def get_advanced_listings(request):
         if 'max_square_meters' in filters:
             listings = listings.filter(square_meters__lte=filters['max_square_meters'])
 
-        if 'max_total_rooms' in filters:
+        if 'max_total_rooms' in filters and filters['max_total_rooms'] > 0:
             listings = listings.annotate(
                 total_rooms=ExpressionWrapper(F('bedrooms') + F('bathrooms'), output_field=IntegerField())
             ).filter(total_rooms__lte=filters['max_total_rooms'])
         
-        boolean_fields = ['furnished', 'new_construction', 'parking', 'balcony', 'elevator', 'is_featured', 'is_active']
+        boolean_fields = ['furnished', 'new_construction', 'parking', 'balcony', 'elevator', 'is_featured']
         for field in boolean_fields:
             if field in filters:
                 listings = listings.filter(**{field: filters[field]})
@@ -372,4 +383,3 @@ def get_fav_or_recent_listings(request):
         return JsonResponse({'listings':serialized_listings})
     else:   
         return JsonResponse({'error':'Invalid method'})    
-

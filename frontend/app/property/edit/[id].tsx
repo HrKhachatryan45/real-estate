@@ -320,7 +320,7 @@ useEffect(() => {
                         placeholderTextColor={'#666'}
                         inputContainerStyle={[
                             styles.input,
-                            { height: 100 },
+                            { height: 100,marginTop:20 },
                             listingError?.toString()?.toLowerCase()?.includes('description') && { borderColor: theme.error }
                         ]}
                         placeholder='Description *'

@@ -48,7 +48,7 @@ export default function messages() {
                 <TouchableOpacity onPress={() => router.replace('/conversations/'+userX?.id)} style={{flexDirection:'row',alignItems:'center',opacity:0.9,backgroundColor:'rgba(62,138,167,0.5)',padding:9,borderRadius:15}}>
                   <Avatar source={userX?.profile_picture} name={userX?.fullname} size={80}/>
                   <View style={{justifyContent:'flex-start',marginLeft:20}}>
-                    <Text style={{fontSize:20,fontWeight:600, fontFamily: "sans-serif"}}>{user.fullname}</Text>
+                    <Text style={{fontSize:20,fontWeight:600, fontFamily: "sans-serif"}}>{user?.fullname}</Text>
                     <Text style={{fontSize:15,marginTop:5}}>{item.last_message}</Text>
                   </View>
                 </TouchableOpacity>

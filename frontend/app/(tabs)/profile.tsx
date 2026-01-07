@@ -112,6 +112,7 @@ export default function profile() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor:'red'
   },
   input:{
         width: '100%',
@@ -528,7 +529,7 @@ useEffect(() => {
 
     
     const renderListingItem = ({ item },value,showEdit = false) => (
-      <TouchableOpacity onPress={() => router.push(`/property/${item.id}`)} style={!value ? [styles.listingCard]:[styles.listingCardHorizontal]}>
+      <TouchableOpacity onPress={() => router.replace(`/property/${item.id}`)} style={!value ? [styles.listingCard]:[styles.listingCardHorizontal]}>
         <Image
           source={{ uri: item.images[0]?.url }}
           style={styles.listingImage}
@@ -559,8 +560,9 @@ useEffect(() => {
 
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <ScrollView   showsVerticalScrollIndicator={false}>
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
+    <SafeAreaView style={[styles.container]}>
+      <ScrollView contentContainerStyle={[{ backgroundColor: theme.background }]}   showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           <Header
             leftIconStyles={{ backgroundColor: 'transparent', padding: 0 }}
@@ -957,5 +959,6 @@ useEffect(() => {
       </Modal>
 
     </SafeAreaView>
+    </View>
   )
 }

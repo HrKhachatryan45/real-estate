@@ -1,5 +1,6 @@
+import Colors from '@/constants/Colors';
 import React, { useState } from 'react';
-import { View, TextInput, Text, StyleSheet, TextInputProps } from 'react-native';
+import { View, TextInput, Text, StyleSheet, TextInputProps, useColorScheme } from 'react-native';
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -10,6 +11,7 @@ interface InputProps extends TextInputProps {
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   applyFocus?: boolean;
+  containerStyle:Object;
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -21,42 +23,15 @@ export const Input: React.FC<InputProps> = ({
   addStyles,
   inputContainerStyle,
   applyFocus = false,
+  containerStyle,
   ...props
 }) => {
   const [isFocused, setIsFocused] = useState(false);
 
-  return (
-    <View style={styles.container}>
-      {label && <Text style={styles.label}>{label}</Text>}
+  const colors = useColorScheme()
+  const theme = Colors[colors ?? 'light'];
 
-      <View
-        style={[
-          styles.inputContainer,
-          inputContainerStyle,       // ⭐ now you can set width, background, border
-          applyFocus && isFocused && styles.focused,
-          error && styles.error,
-        ]}
-      >
-        {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
-
-        <TextInput
-          style={[styles.input, addStyles]}  // ⭐ TextInput styles only
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          placeholderTextColor="#999"
-          {...props}
-        />
-
-        {rightIcon && <View style={styles.rightIcon}>{rightIcon}</View>}
-      </View>
-
-      {error && <Text style={styles.errorText}>{error}</Text>}
-      {helperText && !error && <Text style={styles.helperText}>{helperText}</Text>}
-    </View>
-  );
-};
-
-const styles = StyleSheet.create({
+  const styles = StyleSheet.create({
   container: {
     marginBottom: 16,
   },
@@ -70,9 +45,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#ddd',
+    borderColor: theme.backgroundSecondary,
     borderRadius: 8,
-    backgroundColor: '#fff',
+    backgroundColor:theme.background,
   },
   focused: {
     borderColor: '#007AFF',
@@ -86,7 +61,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 12,
     fontSize: 14,
-    color: '#333',
+    color: theme.text,
   },
   leftIcon: {
     marginLeft: 12,
@@ -105,3 +80,38 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 });
+
+
+
+  return (
+    <View style={[containerStyle,styles.container]}>
+      {label && <Text style={styles.label}>{label}</Text>}
+
+      <View
+        style={[
+          styles.inputContainer,
+          inputContainerStyle,       // ⭐ now you can set width, background, border
+          applyFocus && isFocused && styles.focused,
+          error && styles.error,
+        ]}
+      >
+        {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
+
+        <TextInput
+          style={[styles.input, addStyles]}  // ⭐ TextInput styles only
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          placeholderTextColor={theme.text}
+          {...props}
+        />
+
+        {rightIcon && <View style={styles.rightIcon}>{rightIcon}</View>}
+      </View>
+
+      {error && <Text style={styles.errorText}>{error}</Text>}
+      {helperText && !error && <Text style={styles.helperText}>{helperText}</Text>}
+    </View>
+  );
+};
+
+

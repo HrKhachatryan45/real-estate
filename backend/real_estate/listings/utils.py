@@ -3,6 +3,8 @@ from django.conf import settings
 import jwt
 import uuid
 from datetime import datetime,timedelta,date
+from django.core.mail import EmailMessage
+from .email_templates.expiration import ListingExpirationEmailTemplate as templateX
 
 ACCESS_TOKEN_SECRET = os.getenv('ACCESS_TOKEN_SECRET')
 REFRESH_TOKEN_SECRET = os.getenv('REFRESH_TOKEN_SECRET')
@@ -38,3 +40,16 @@ def decode_jwt(token,isAccess):
         return None
     except jwt.InvalidTokenError as e:
         return None
+
+
+def send_expiration_email(to_email,title,user):
+    subject = templateX.subject.format(fullname=user.fullname)
+    body = templateX.body.format(fullname=user.fullname,title=title)
+    email = EmailMessage(
+        subject=subject,
+        body=body,
+        from_email=os.getenv('EMAIL_HOST_USER'),
+        to=[to_email],
+    )
+    email.content_subtype = "html"
+    email.send()

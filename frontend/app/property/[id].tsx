@@ -233,7 +233,7 @@ const SCREEN_WIDTH = Dimensions.get('window').width
                                             size={24} 
                                         />
                                     </TouchableOpacity>
-                                    {propertyListing.owner.id === user?.id && (
+                                    {propertyListing?.owner?.id === user?.id && (
                                         <TouchableOpacity 
                                         onPress={() => router.replace('property/edit/'+id)}
                                         style={[styles.iconButton, { backgroundColor: 'rgba(0,0,0,0.5)' }]}
@@ -441,22 +441,27 @@ const SCREEN_WIDTH = Dimensions.get('window').width
                                     value={`${propertyListing.land_area} m²`}
                                 />
                             )}
-                            {propertyListing?.owner?.phone_number && (
+                            {propertyListing?.owner?.phone_number && propertyListing?.is_active && (
                                 <InfoItem 
                                     icon={<Phone size={20} color={theme.primary} />}
                                     label="Owner Phone"
-                                    value={propertyListing.owner.phone_number}
+                                    value={propertyListing?.owner?.phone_number}
                                 />
                             )}
                         </View>
                     )}
 
                     {/* to avoid same person messaging  */}
-                    {user.id != propertyListing.owner.id && <TouchableOpacity 
+                    {propertyListing?.owner && propertyListing?.is_active && (user.id != propertyListing?.owner?.id) && <TouchableOpacity 
                         onPress={() => router.replace('/conversations/'+propertyListing?.owner?.id)}
                         style={[styles.contactButton, { backgroundColor: theme.primary }]}
                     >
                         <Text style={styles.contactButtonText}>Message Owner</Text>
+                    </TouchableOpacity>}
+                    {(propertyListing?.expired || !propertyListing?.is_active) && <TouchableOpacity 
+                        style={[styles.contactButton, { backgroundColor: theme.error }]}
+                    >
+                        <Text style={styles.contactButtonText}>Expired</Text>
                     </TouchableOpacity>}
                 </View>
             </ScrollView>

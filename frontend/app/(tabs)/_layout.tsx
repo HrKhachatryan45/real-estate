@@ -1,4 +1,6 @@
 import React, { useEffect, useRef } from 'react';
+import { BlurView } from 'expo-blur';
+
 import Svg, { Path } from 'react-native-svg';
 import { router } from 'expo-router';
 import { Animated, TouchableOpacity, View, Text, useColorScheme } from 'react-native';
@@ -9,7 +11,7 @@ import { useRouter } from 'expo-router';
 import Colors from '@/constants/Colors';
 
 function CustomTabBar({ state, descriptors, navigation }: any) {
-  const colors = useColorScheme();
+  const colors = useColorScheme()
   const theme = Colors[colors ?? 'light'];
 
   return (
@@ -108,6 +110,7 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
                   >
                     <IconSymbol name={options.icon} size={20} color={theme.textMuted} />
                   </LinearGradient>
+                  
               
               </Animated.View>
             </TouchableOpacity>
@@ -146,7 +149,7 @@ export default function TabLayout() {
   return (
      <View style={{
       flex: 1,
-      backgroundColor:'transparent',
+      backgroundColor:theme.background,
 
     }}>
     <Tabs screenOptions={{headerShown:false}} tabBar={(props) => <CustomTabBar {...props} />}>
