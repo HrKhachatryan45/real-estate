@@ -5,7 +5,7 @@ export default {
     version: "1.0.0",
 
     extra: {
-      HOST_URL: "http://192.168.2.109:8000",
+      HOST_URL: "http://127.0.0.1:8000",
       eas: {
         projectId: "42e3ad53-1eac-46b4-b653-1d152a77fc17"
     },

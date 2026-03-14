@@ -47,7 +47,7 @@ export default function PropertyDetails() {
             console.log(listing, 46);
             
             setPropertyListing(listing)
-            setSelectedPrice(`${currency[listing.currency]}${listing.price}`)
+            setSelectedPrice(`${currency[listing?.currency]} ${listing?.price}`)
         }
         fetchListing()
     }, [])
